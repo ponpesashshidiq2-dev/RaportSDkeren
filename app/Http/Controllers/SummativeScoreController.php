@@ -32,7 +32,7 @@ class SummativeScoreController extends Controller
         $semester = (string) ($request->input('semester') ?: $settings->active_semester);
 
         $students = $classroom
-            ? Student::query()->where('classroom_id', $classroom->id)->where('is_active', true)->orderBy('nama')->get()
+            ? Student::query()->visibleTo($request->user())->where('classroom_id', $classroom->id)->where('is_active', true)->orderBy('nama')->get()
             : collect();
 
         $lingkupOptions = ($subject)
@@ -87,6 +87,7 @@ class SummativeScoreController extends Controller
 
         foreach (($data['rows'] ?? []) as $studentId => $score) {
             $student = Student::query()
+                ->visibleTo($request->user())
                 ->where('id', $studentId)
                 ->where('classroom_id', $classroom->id)
                 ->first();

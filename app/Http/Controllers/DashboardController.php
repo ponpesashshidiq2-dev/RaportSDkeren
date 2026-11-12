@@ -19,7 +19,7 @@ class DashboardController extends Controller
         $settings = ReportSetting::current();
 
         $stats = [
-            'siswa' => Student::query()->where('is_active', true)->count(),
+            'siswa' => Student::query()->visibleTo($user)->where('is_active', true)->count(),
             'guru' => User::query()->whereIn('role', [
                 User::ROLE_GURU,
                 User::ROLE_WALI_KELAS,
@@ -38,7 +38,7 @@ class DashboardController extends Controller
             ->get();
 
         $siswaPerKelas = Classroom::query()
-            ->withCount(['students' => fn ($q) => $q->where('is_active', true)])
+            ->withCount(['students' => fn ($q) => $q->visibleTo($user)->where('is_active', true)])
             ->orderBy('grade')
             ->orderBy('name')
             ->get();

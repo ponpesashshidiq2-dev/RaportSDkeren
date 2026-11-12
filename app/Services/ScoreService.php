@@ -9,6 +9,7 @@ use App\Models\ReportSetting;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\SummativeScore;
+use App\Models\User;
 use Illuminate\Support\Collection;
 
 /**
@@ -127,11 +128,15 @@ class ScoreService
     /**
      * Rekap nilai akhir satu kelas + penanda penurunan (merah) dari periode sebelumnya.
      *
+     * $user: siswa yang direkap dibatasi hanya yang terlihat oleh user tersebut
+     * (guru/wali: buatan sendiri; admin/kepsek: semua).
+     *
      * @return Collection<int, object{student:Student, subjects:Collection<int, object{subject:Subject, final:?float, previous:?float, decreased:bool}>}>
      */
-    public function recapWithComparison(Classroom $classroom, string $academicYear, string $semester, ?Subject $subjectFilter = null): Collection
+    public function recapWithComparison(Classroom $classroom, string $academicYear, string $semester, ?Subject $subjectFilter = null, ?User $user = null): Collection
     {
         $students = Student::query()
+            ->visibleTo($user)
             ->where('classroom_id', $classroom->id)
             ->where('is_active', true)
             ->orderBy('nama')

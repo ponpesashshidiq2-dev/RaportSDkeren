@@ -92,6 +92,32 @@
                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
 
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Input Oleh (Pemilik Data)
+                        <span class="text-slate-400 text-xs font-normal">penentu pengguna yang boleh melihat &amp; menginput siswa ini</span>
+                    </label>
+                    @if($canChooseOwner)
+                        <select name="created_by"
+                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="">-- Pilih pemilik (opsional) --</option>
+                            @foreach($owners as $owner)
+                                <option value="{{ $owner->id }}" {{ old('created_by', $student->created_by) == $owner->id ? 'selected' : '' }}>
+                                    {{ $owner->name }} — {{ $owner->roleLabel() }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="mt-1 text-[11px] text-slate-400">
+                            Kosongkan = pemilik tetap seperti saat ini (baru: akun Anda).
+                            Guru/Wali hanya melihat siswa yang menjadi miliknya.
+                        </p>
+                    @else
+                        <input type="text" disabled
+                               value="{{ $student->creator?->name ?? auth()->user()->name }}"
+                               class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
+                        <p class="mt-1 text-[11px] text-slate-400">Anda membuat siswa ini, sehingga hanya Anda (dan admin) yang dapat melihat &amp; menginputnya.</p>
+                    @endif
+                </div>
+
                 <div class="md:col-span-2 flex items-center gap-2">
                     <input type="hidden" name="is_active" value="0">
                     <input type="checkbox" id="is_active" name="is_active" value="1"

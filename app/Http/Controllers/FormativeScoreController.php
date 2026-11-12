@@ -22,7 +22,7 @@ class FormativeScoreController extends Controller
         [$classroom, $subject, $year, $semester] = $this->resolveContext($request);
 
         $students = $classroom
-            ? Student::query()->where('classroom_id', $classroom->id)->where('is_active', true)->orderBy('nama')->get()
+            ? Student::query()->visibleTo($request->user())->where('classroom_id', $classroom->id)->where('is_active', true)->orderBy('nama')->get()
             : collect();
 
         $objectives = ($classroom && $subject)
@@ -77,6 +77,7 @@ class FormativeScoreController extends Controller
 
         foreach ($posted as $studentId => $tpScores) {
             $student = Student::query()
+                ->visibleTo($request->user())
                 ->where('id', $studentId)
                 ->where('classroom_id', $classroom->id)
                 ->first();

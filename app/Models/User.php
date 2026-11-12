@@ -78,4 +78,23 @@ class User extends Authenticatable
             default => ucfirst($this->role),
         };
     }
+
+    /**
+     * Bolehkah user ini melihat/mengelola satu siswa tertentu?
+     * Aturan sama dengan Student::scopeVisibleTo().
+     */
+    public function canSeeStudent(?Student $student): bool
+    {
+        if ($student === null) {
+            return false;
+        }
+
+        return match ($this->role) {
+            self::ROLE_SUPER_ADMIN, self::ROLE_KEPALA_SEKOLAH => true,
+            self::ROLE_SISWA_ORANGTUA => $this->student_id !== null
+                && (int) $this->student_id === (int) $student->id,
+            default => $student->created_by !== null
+                && (int) $student->created_by === (int) $this->id,
+        };
+    }
 }

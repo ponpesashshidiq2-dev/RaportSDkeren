@@ -27,7 +27,10 @@ class StudentsImport implements ToModel, WithHeadingRow, WithValidation, SkipsEm
 
     public static int $importedCount = 0;
 
-    public function __construct(private ?int $defaultClassroomId = null) {}
+    public function __construct(
+        private ?int $defaultClassroomId = null,
+        private ?int $createdBy = null,
+    ) {}
 
     public function model(array $row): Student
     {
@@ -48,6 +51,7 @@ class StudentsImport implements ToModel, WithHeadingRow, WithValidation, SkipsEm
             'nama_ibu' => $this->nullableString($row['nama_ibu'] ?? null),
             'nama_wali' => $this->nullableString($row['nama_wali'] ?? null),
             'classroom_id' => $classroomId,
+            'created_by' => $this->createdBy,
             'is_active' => true,
         ]);
     }

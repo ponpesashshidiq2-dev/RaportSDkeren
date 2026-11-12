@@ -18,7 +18,7 @@ class ExtracurricularScoreController extends Controller
         [$classroom, $extracurricular, $year, $semester] = $this->resolveContext($request);
 
         $students = $classroom
-            ? Student::query()->where('classroom_id', $classroom->id)->where('is_active', true)->orderBy('nama')->get()
+            ? Student::query()->visibleTo($request->user())->where('classroom_id', $classroom->id)->where('is_active', true)->orderBy('nama')->get()
             : collect();
 
         $scores = ($students->isNotEmpty() && $extracurricular)
@@ -60,6 +60,7 @@ class ExtracurricularScoreController extends Controller
 
         foreach (($data['rows'] ?? []) as $studentId => $predikat) {
             $student = Student::query()
+                ->visibleTo($request->user())
                 ->where('id', $studentId)
                 ->where('classroom_id', $classroom->id)
                 ->first();

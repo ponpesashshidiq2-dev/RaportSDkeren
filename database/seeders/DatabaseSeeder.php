@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
         $this->call(SubjectSeeder::class);
 
         // Akun default (ganti password setelah login pertama!)
-        User::query()->updateOrCreate(['email' => 'admin@sekolah.test'], [
+        $admin = User::query()->updateOrCreate(['email' => 'admin@sekolah.test'], [
             'name' => 'Super Administrator',
             'password' => 'password',
             'role' => User::ROLE_SUPER_ADMIN,
@@ -47,12 +47,38 @@ class DatabaseSeeder extends Seeder
             );
         }
 
-        User::query()->updateOrCreate(['email' => 'guru@sekolah.test'], [
+        $guru = User::query()->updateOrCreate(['email' => 'guru@sekolah.test'], [
             'name' => 'Guru Kelas 1',
             'password' => 'password',
             'role' => User::ROLE_GURU,
             'classroom_id' => Classroom::query()->where('grade', 1)->where('academic_year', $year)->value('id'),
         ]);
+
+        // Kepemilikan demo (uji scoping "hanya siswa inputan sendiri"):
+        // Ahmad Fauzi dibuat guru -> guru melihatnya; Budi Wijaya dibuat admin -> guru TIDAK melihatnya.
+        \App\Models\Student::query()->where('nisn', '0012345678')->update([
+            'created_by' => $guru->id,
+            'jenis_kelamin' => 'L',
+        ]);
+
+        $kelas1 = Classroom::query()->where('grade', 1)->where('academic_year', $year)->first();
+
+        if ($kelas1) {
+            \App\Models\Student::query()->firstOrCreate(['nisn' => '0012345699'], [
+                'nis' => 'SD-002',
+                'nama' => 'Budi Wijaya',
+                'jenis_kelamin' => 'L',
+                'tempat_lahir' => 'Padang',
+                'tanggal_lahir' => date('Y-06-15', strtotime('-6 years')),
+                'alamat' => 'Jl. Merdeka No. 2, Padang',
+                'nama_ayah' => 'Andi Wijaya',
+                'nama_ibu' => 'Ratna Sari',
+                'nama_wali' => 'Andi Wijaya',
+                'classroom_id' => $kelas1->id,
+                'created_by' => $admin->id,
+                'is_active' => true,
+            ]);
+        }
 
         // Akun demo Siswa/Orang Tua — tertaut ke data siswa (bila ada)
         $demoStudent = \App\Models\Student::query()

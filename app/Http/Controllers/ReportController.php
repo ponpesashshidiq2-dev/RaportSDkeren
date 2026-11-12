@@ -45,6 +45,7 @@ class ReportController extends Controller
 
         if ($classroom) {
             $students = Student::query()
+                ->visibleTo($user)
                 ->where('classroom_id', $classroom->id)
                 ->where('is_active', true)
                 ->orderBy('nama')
@@ -81,7 +82,7 @@ class ReportController extends Controller
         $semester = (string) ($request->input('semester') ?: $settings->active_semester);
 
         $recap = $classroom
-            ? $this->scoreService->recapWithComparison($classroom, $year, $semester, $subject)
+            ? $this->scoreService->recapWithComparison($classroom, $year, $semester, $subject, $request->user())
             : collect();
 
         return view('reports.recap', [
@@ -149,7 +150,15 @@ class ReportController extends Controller
 
         $request->validate(['student_id' => ['required', 'exists:students,id']]);
 
-        return Student::query()->with('classroom.waliKelas')->findOrFail($request->integer('student_id'));
+        $student = Student::query()->with('classroom.waliKelas')->findOrFail($request->integer('student_id'));
+
+        abort_unless(
+            $user->canSeeStudent($student),
+            403,
+            'Anda tidak memiliki akses melihat rapor siswa ini. Rapor hanya terlihat oleh pembuat/input data siswa.'
+        );
+
+        return $student;
     }
 
     private function resolveYear(Request $request): string

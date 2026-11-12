@@ -83,7 +83,7 @@
                         </div>
                         <div class="flex justify-between gap-3 border-b border-slate-100 pb-2">
                             <dt class="text-slate-500">Jenis Kelamin</dt>
-                            <dd class="font-medium">{{ $student->jenis_kelamin ?? '-' }}</dd>
+                            <dd class="font-medium">{{ $student->jenis_kelamin_label }}</dd>
                         </div>
                         <div class="flex justify-between gap-3 border-b border-slate-100 pb-2">
                             <dt class="text-slate-500">Tempat, Tgl Lahir</dt>

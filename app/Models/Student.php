@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -22,6 +23,7 @@ class Student extends Model
         'nama_wali',
         'classroom_id',
         'photo',
+        'created_by',
         'is_active',
     ];
 
@@ -31,6 +33,32 @@ class Student extends Model
     ];
 
     protected $appends = ['ttl'];
+
+    /**
+     * Siswa yang boleh dilihat/dikelola oleh user tertentu:
+     * - Super Admin & Kepala Sekolah: semua siswa
+     * - Siswa/Orang Tua: hanya miliknya sendiri
+     * - Guru & Wali Kelas: hanya siswa yang dibuat/diimport sendiri (created_by)
+     *
+     * Fail-closed: user null = tidak terlihat sama sekali.
+     */
+    public function scopeVisibleTo(Builder $query, ?User $user): Builder
+    {
+        if ($user === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return match ($user->role) {
+            User::ROLE_SUPER_ADMIN, User::ROLE_KEPALA_SEKOLAH => $query,
+            User::ROLE_SISWA_ORANGTUA => $query->where('id', $user->student_id),
+            default => $query->where('created_by', $user->id),
+        };
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 
     public function classroom(): BelongsTo
     {

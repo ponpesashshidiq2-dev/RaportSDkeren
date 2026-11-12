@@ -47,6 +47,7 @@
                     <th class="text-left px-4 py-3">Tempat, Tanggal Lahir</th>
                     <th class="text-left px-4 py-3">Kelas</th>
                     <th class="text-left px-4 py-3">Alamat</th>
+                    <th class="text-left px-4 py-3">Input Oleh</th>
                     <th class="text-right px-4 py-3">Aksi</th>
                 </tr>
             </thead>
@@ -61,11 +62,14 @@
                                 <span class="ml-1 text-[10px] uppercase bg-slate-200 text-slate-500 rounded px-1.5 py-0.5">Nonaktif</span>
                             @endunless
                         </td>
-                        <td class="px-4 py-3">{{ $student->jenis_kelamin }}</td>
+                        <td class="px-4 py-3">{{ $student->jenis_kelamin_label }}</td>
                         <td class="px-4 py-3 text-slate-500 text-xs">{{ $student->ttl }}</td>
                         <td class="px-4 py-3">{{ $student->classroom?->name ?? '-' }}</td>
                         <td class="px-4 py-3 text-slate-500 text-xs max-w-[220px] truncate" title="{{ $student->alamat }}">
                             {{ $student->alamat }}
+                        </td>
+                        <td class="px-4 py-3 text-xs text-slate-500">
+                            {{ $student->creator?->name ?? '—' }}
                         </td>
                         <td class="px-4 py-3 text-right whitespace-nowrap">
                             <a href="{{ route('students.edit', $student) }}" class="text-indigo-600 hover:underline text-xs font-semibold">Ubah</a>
@@ -77,7 +81,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="8" class="px-4 py-8 text-center text-slate-400">Belum ada data siswa.</td></tr>
+                    <tr><td colspan="9" class="px-4 py-8 text-center text-slate-400">Belum ada data siswa.</td></tr>
                 @endforelse
             </tbody>
         </table>
