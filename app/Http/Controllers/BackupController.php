@@ -148,14 +148,16 @@ class BackupController extends Controller
 
     private function binaryExists(string $binary): bool
     {
-        if (File::isExecutable($binary) || File::exists($binary)) {
+        if (File::exists($binary)) {
             return true;
         }
 
-        $process = new Process([$binary, '--version']);
-        $process->setTimeout(10);
+        // Cari di PATH secara instan (where di Windows, which di OS lain)
+        $finder = PHP_OS_FAMILY === 'Windows' ? 'where' : 'which';
 
         try {
+            $process = new Process([$finder, $binary]);
+            $process->setTimeout(5);
             $process->run();
 
             return $process->isSuccessful();

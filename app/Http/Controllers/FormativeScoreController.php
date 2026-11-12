@@ -142,8 +142,8 @@ class FormativeScoreController extends Controller
             ? Subject::find($request->integer('subject_id'))
             : null;
 
-        $year = $request->string('tahun_ajaran') ?: $settings->active_academic_year;
-        $semester = $request->string('semester') ?: $settings->active_semester;
+        $year = $request->input('tahun_ajaran') ?: $settings->active_academic_year;
+        $semester = $request->input('semester') ?: $settings->active_semester;
 
         return [$classroom, $subject, (string) $year, (string) $semester];
     }

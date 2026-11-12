@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('academic_year', 20);
             $table->enum('semester', ['1', '2']);
             $table->string('lingkup_materi')->comment('Lingkup materi / akhir semester');
-            $table->unsignedDecimal('score', 5, 2);
+            $table->decimal('score', 5, 2);
             $table->date('assessed_at')->nullable();
             $table->timestamps();
 

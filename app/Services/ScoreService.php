@@ -93,7 +93,7 @@ class ScoreService
             ]
         );
 
-        $this->comparison->refreshFlags($student, $subject, $academicYear, $semester);
+        $this->comparison->refreshFlags($student, $subject, $semester, $academicYear);
 
         return $record->refresh();
     }
@@ -140,7 +140,7 @@ class ScoreService
         $subjects = Subject::query()
             ->where('is_active', true)
             ->when($subjectFilter, fn ($q) => $q->where('id', $subjectFilter->id))
-            ->orderByRaw("FIELD(muatan, 'agama', 'nasional', 'lokal')")
+            ->orderByRaw("CASE muatan WHEN 'agama' THEN 1 WHEN 'nasional' THEN 2 WHEN 'lokal' THEN 3 ELSE 4 END")
             ->orderBy('name')
             ->get();
 

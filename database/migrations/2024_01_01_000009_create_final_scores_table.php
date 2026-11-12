@@ -15,10 +15,10 @@ return new class extends Migration
             $table->foreignId('classroom_id')->nullable()->constrained('classrooms')->nullOnDelete();
             $table->string('academic_year', 20);
             $table->enum('semester', ['1', '2']);
-            $table->unsignedDecimal('avg_formatif', 5, 2)->nullable();
-            $table->unsignedDecimal('avg_sumatif', 5, 2)->nullable();
-            $table->unsignedDecimal('final_score', 5, 2)->nullable()->comment('Hasil gabungan formatif & sumatif');
-            $table->unsignedDecimal('previous_score', 5, 2)->nullable()->comment('Nilai semester/tahun sebelumnya');
+            $table->decimal('avg_formatif', 5, 2)->nullable();
+            $table->decimal('avg_sumatif', 5, 2)->nullable();
+            $table->decimal('final_score', 5, 2)->nullable()->comment('Hasil gabungan formatif & sumatif');
+            $table->decimal('previous_score', 5, 2)->nullable()->comment('Nilai semester/tahun sebelumnya');
             $table->boolean('is_decreased')->default(false)->comment('True = turun dari semester sebelumnya (merah)');
             $table->timestamp('calculated_at')->nullable();
             $table->timestamps();

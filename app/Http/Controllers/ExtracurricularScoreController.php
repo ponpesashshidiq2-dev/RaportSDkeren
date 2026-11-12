@@ -110,8 +110,8 @@ class ExtracurricularScoreController extends Controller
             ? Extracurricular::find($request->integer('extracurricular_id'))
             : null;
 
-        $year = (string) ($request->string('tahun_ajaran') ?: $settings->active_academic_year);
-        $semester = (string) ($request->string('semester') ?: $settings->active_semester);
+        $year = (string) ($request->input('tahun_ajaran') ?: $settings->active_academic_year);
+        $semester = (string) ($request->input('semester') ?: $settings->active_semester);
 
         return [$classroom, $extracurricular, $year, $semester];
     }

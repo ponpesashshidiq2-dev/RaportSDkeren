@@ -74,7 +74,7 @@ class ReportService
         $subjects = Subject::query()
             ->printable()
             ->where('is_active', true)
-            ->orderByRaw("FIELD(muatan, 'agama', 'nasional', 'lokal')")
+            ->orderByRaw("CASE muatan WHEN 'agama' THEN 1 WHEN 'nasional' THEN 2 WHEN 'lokal' THEN 3 ELSE 4 END")
             ->orderBy('name')
             ->get();
 

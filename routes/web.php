@@ -38,9 +38,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Data siswa (termasuk import Excel)
     Route::middleware('role:super_admin,kepala_sekolah,guru,wali_kelas')->group(function () {
-        Route::resource('students', StudentController::class);
         Route::get('students/import', [StudentController::class, 'importForm'])->name('students.import');
         Route::post('students/import', [StudentController::class, 'import'])->name('students.import.store');
+        Route::resource('students', StudentController::class)->except(['show']);
     });
 
     // Mata pelajaran & KKM

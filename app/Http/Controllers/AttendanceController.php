@@ -20,8 +20,8 @@ class AttendanceController extends Controller
             ? Classroom::find($request->integer('classroom_id'))
             : null;
 
-        $year = (string) ($request->string('tahun_ajaran') ?: $settings->active_academic_year);
-        $semester = (string) ($request->string('semester') ?: $settings->active_semester);
+        $year = (string) ($request->input('tahun_ajaran') ?: $settings->active_academic_year);
+        $semester = (string) ($request->input('semester') ?: $settings->active_semester);
 
         $students = $classroom
             ? Student::query()->where('classroom_id', $classroom->id)->where('is_active', true)->orderBy('nama')->get()

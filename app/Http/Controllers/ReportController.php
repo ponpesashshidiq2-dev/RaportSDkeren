@@ -55,8 +55,8 @@ class ReportController extends Controller
             'classrooms' => Classroom::query()->orderBy('grade')->orderBy('name')->get(),
             'students' => $students,
             'classroom' => $classroom,
-            'year' => (string) ($request->string('tahun_ajaran') ?: $settings->active_academic_year),
-            'semester' => (string) ($request->string('semester') ?: $settings->active_semester),
+            'year' => (string) ($request->input('tahun_ajaran') ?: $settings->active_academic_year),
+            'semester' => (string) ($request->input('semester') ?: $settings->active_semester),
             'settings' => $settings,
         ]);
     }
@@ -77,8 +77,8 @@ class ReportController extends Controller
             ? Subject::find($request->integer('subject_id'))
             : null;
 
-        $year = (string) ($request->string('tahun_ajaran') ?: $settings->active_academic_year);
-        $semester = (string) ($request->string('semester') ?: $settings->active_semester);
+        $year = (string) ($request->input('tahun_ajaran') ?: $settings->active_academic_year);
+        $semester = (string) ($request->input('semester') ?: $settings->active_semester);
 
         $recap = $classroom
             ? $this->scoreService->recapWithComparison($classroom, $year, $semester, $subject)
@@ -154,11 +154,11 @@ class ReportController extends Controller
 
     private function resolveYear(Request $request): string
     {
-        return (string) ($request->string('tahun_ajaran') ?: ReportSetting::current()->active_academic_year);
+        return (string) ($request->input('tahun_ajaran') ?: ReportSetting::current()->active_academic_year);
     }
 
     private function resolveSemester(Request $request): string
     {
-        return (string) ($request->string('semester') ?: ReportSetting::current()->active_semester);
+        return (string) ($request->input('semester') ?: ReportSetting::current()->active_semester);
     }
 }

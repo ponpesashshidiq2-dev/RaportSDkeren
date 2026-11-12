@@ -19,8 +19,8 @@ class LearningObjectiveController extends Controller
         $filters = [
             'subject_id' => $request->integer('subject_id') ?: null,
             'classroom_id' => $request->integer('classroom_id') ?: null,
-            'tahun_ajaran' => (string) ($request->string('tahun_ajaran') ?: $settings->active_academic_year),
-            'semester' => (string) ($request->string('semester') ?: $settings->active_semester),
+            'tahun_ajaran' => (string) ($request->input('tahun_ajaran') ?: $settings->active_academic_year),
+            'semester' => (string) ($request->input('semester') ?: $settings->active_semester),
         ];
 
         $objectives = LearningObjective::query()
@@ -49,8 +49,8 @@ class LearningObjectiveController extends Controller
 
         return view('learning-objectives.form', [
             'objective' => new LearningObjective([
-                'academic_year' => (string) ($request->string('tahun_ajaran') ?: $settings->active_academic_year),
-                'semester' => (string) ($request->string('semester') ?: $settings->active_semester),
+                'academic_year' => (string) ($request->input('tahun_ajaran') ?: $settings->active_academic_year),
+                'semester' => (string) ($request->input('semester') ?: $settings->active_semester),
                 'classroom_id' => $request->integer('classroom_id') ?: null,
                 'subject_id' => $request->integer('subject_id') ?: null,
             ]),

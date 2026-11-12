@@ -20,8 +20,8 @@ return new class extends Migration
             $table->string('kepala_sekolah_nip')->nullable();
             $table->string('active_academic_year', 20)->default('2025/2026');
             $table->enum('active_semester', ['1', '2'])->default('1')->comment('1=Ganjil, 2=Genap');
-            $table->unsignedDecimal('formatif_weight', 5, 2)->default(40)->comment('Bobot nilai formatif (%)');
-            $table->unsignedDecimal('sumatif_weight', 5, 2)->default(60)->comment('Bobot nilai sumatif (%)');
+            $table->decimal('formatif_weight', 5, 2)->default(40)->comment('Bobot nilai formatif (%)');
+            $table->decimal('sumatif_weight', 5, 2)->default(60)->comment('Bobot nilai sumatif (%)');
             $table->string('default_phase', 5)->default('A')->comment('Fase Kurikulum Merdeka');
             $table->string('report_footer', 255)->nullable();
             $table->timestamps();

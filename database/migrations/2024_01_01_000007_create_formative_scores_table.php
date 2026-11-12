@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('classroom_id')->constrained('classrooms')->cascadeOnDelete();
             $table->string('academic_year', 20);
             $table->enum('semester', ['1', '2']);
-            $table->unsignedDecimal('score', 5, 2)->comment('Nilai formatif per TP (0-100)');
+            $table->decimal('score', 5, 2)->comment('Nilai formatif per TP (0-100)');
             $table->date('assessed_at')->nullable();
             $table->text('note')->nullable();
             $table->timestamps();

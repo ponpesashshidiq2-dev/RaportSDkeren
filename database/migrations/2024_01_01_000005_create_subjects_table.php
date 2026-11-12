@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('code', 30)->nullable()->unique();
             $table->string('name')->comment('Nama mata pelajaran');
             $table->enum('muatan', ['agama', 'nasional', 'lokal'])->comment('3 muatan kurikulum');
-            $table->unsignedDecimal('kkm', 5, 2)->nullable()->comment('KKM; kosong = mapel TIDAK dicetak di rapor');
+            $table->decimal('kkm', 5, 2)->nullable()->comment('KKM; kosong = mapel TIDAK dicetak di rapor');
             $table->string('phase', 5)->nullable()->comment('Fase (opsional per mapel)');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
