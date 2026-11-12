@@ -8,10 +8,13 @@ use App\Http\Controllers\ExtracurricularController;
 use App\Http\Controllers\ExtracurricularScoreController;
 use App\Http\Controllers\FormativeScoreController;
 use App\Http\Controllers\LearningObjectiveController;
+use App\Http\Controllers\MyScoreController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\SummativeScoreController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -35,6 +38,19 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
+
+    // Profil akun (semua role) — data siswa tampil bila akun tertaut
+    Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
+
+    // Nilai milik sendiri (khusus akun siswa/orang tua; data tidak bisa diakses lintas user)
+    Route::middleware('role:siswa_orangtua')->group(function () {
+        Route::get('my-scores', [MyScoreController::class, 'index'])->name('my-scores.index');
+    });
+
+    // Kelola pengguna multi-role (Super Admin)
+    Route::middleware('role:super_admin')->group(function () {
+        Route::resource('users', UserController::class)->except(['show']);
+    });
 
     // Data siswa (termasuk import Excel)
     Route::middleware('role:super_admin,kepala_sekolah,guru,wali_kelas')->group(function () {

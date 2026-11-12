@@ -46,5 +46,43 @@ class DatabaseSeeder extends Seeder
                 ['wali_kelas_id' => $grade === 1 ? $wali->id : null]
             );
         }
+
+        User::query()->updateOrCreate(['email' => 'guru@sekolah.test'], [
+            'name' => 'Guru Kelas 1',
+            'password' => 'password',
+            'role' => User::ROLE_GURU,
+            'classroom_id' => Classroom::query()->where('grade', 1)->where('academic_year', $year)->value('id'),
+        ]);
+
+        // Akun demo Siswa/Orang Tua — tertaut ke data siswa (bila ada)
+        $demoStudent = \App\Models\Student::query()
+            ->where('nisn', '0012345678')
+            ->first();
+
+        if (! $demoStudent) {
+            $kelas1 = Classroom::query()->where('grade', 1)->where('academic_year', $year)->first();
+
+            $demoStudent = $kelas1 ? \App\Models\Student::query()->create([
+                'nisn' => '0012345678',
+                'nis' => 'SD-001',
+                'nama' => 'Ahmad Fauzi',
+                'jenis_kelamin' => 'Laki-laki',
+                'tempat_lahir' => 'Padang',
+                'tanggal_lahir' => date('Y-07-10', strtotime('-6 years')),
+                'alamat' => 'Jl. Pendidikan No. 1, Padang',
+                'nama_ayah' => 'Budi Santoso',
+                'nama_ibu' => 'Siti Aminah',
+                'nama_wali' => 'Budi Santoso',
+                'classroom_id' => $kelas1->id,
+                'is_active' => true,
+            ]) : null;
+        }
+
+        User::query()->updateOrCreate(['email' => 'siswa@sekolah.test'], [
+            'name' => $demoStudent?->nama ?? 'Siswa Demo',
+            'password' => 'password',
+            'role' => User::ROLE_SISWA_ORANGTUA,
+            'student_id' => $demoStudent?->id,
+        ]);
     }
 }

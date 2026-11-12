@@ -33,6 +33,22 @@
                class="block px-5 py-2.5 hover:bg-indigo-800 {{ request()->routeIs('dashboard') ? 'bg-indigo-800 text-white font-semibold' : '' }}">
                 Dashboard Profil
             </a>
+            <a href="{{ route('profile.show') }}"
+               class="block px-5 py-2.5 hover:bg-indigo-800 {{ request()->routeIs('profile.show') ? 'bg-indigo-800 text-white font-semibold' : '' }}">
+                Profil Saya
+            </a>
+
+            @if($role === 'siswa_orangtua')
+                <div class="px-5 pt-5 pb-1 text-[11px] uppercase tracking-wider text-indigo-400">Akun Saya</div>
+                <a href="{{ route('my-scores.index') }}"
+                   class="block px-5 py-2.5 hover:bg-indigo-800 {{ request()->routeIs('my-scores.*') ? 'bg-indigo-800 text-white font-semibold' : '' }}">
+                    Nilai Saya <span class="text-indigo-400">(hanya milik Anda)</span>
+                </a>
+                <a href="{{ route('reports.index') }}"
+                   class="block px-5 py-2.5 hover:bg-indigo-800 {{ request()->routeIs('reports.index') || request()->routeIs('reports.show') ? 'bg-indigo-800 text-white font-semibold' : '' }}">
+                    Rapor Saya
+                </a>
+            @endif
 
             @if($isStaff)
                 <div class="px-5 pt-5 pb-1 text-[11px] uppercase tracking-wider text-indigo-400">Data</div>
@@ -88,6 +104,10 @@
 
             @if($isSuper)
                 <div class="px-5 pt-5 pb-1 text-[11px] uppercase tracking-wider text-indigo-400">Sistem</div>
+                <a href="{{ route('users.index') }}"
+                   class="block px-5 py-2.5 hover:bg-indigo-800 {{ request()->routeIs('users.*') ? 'bg-indigo-800 text-white font-semibold' : '' }}">
+                    Kelola Pengguna
+                </a>
                 <a href="{{ route('backup.index') }}"
                    class="block px-5 py-2.5 hover:bg-indigo-800 {{ request()->routeIs('backup.*') ? 'bg-indigo-800 text-white font-semibold' : '' }}">
                     Backup &amp; Restore
