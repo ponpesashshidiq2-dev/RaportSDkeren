@@ -1,0 +1,118 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Classroom;
+use App\Models\Extracurricular;
+use App\Models\ExtracurricularScore;
+use App\Models\ReportSetting;
+use App\Models\Student;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+
+class ExtracurricularScoreController extends Controller
+{
+    public function index(Request $request): View
+    {
+        [$classroom, $extracurricular, $year, $semester] = $this->resolveContext($request);
+
+        $students = $classroom
+            ? Student::query()->where('classroom_id', $classroom->id)->where('is_active', true)->orderBy('nama')->get()
+            : collect();
+
+        $scores = ($students->isNotEmpty() && $extracurricular)
+            ? ExtracurricularScore::query()
+                ->where('extracurricular_id', $extracurricular->id)
+                ->where('academic_year', $year)
+                ->where('semester', $semester)
+                ->whereIn('student_id', $students->pluck('id'))
+                ->get()
+                ->keyBy('student_id')
+            : collect();
+
+        return view('scores.extracurricular', [
+            'classroom' => $classroom,
+            'extracurricular' => $extracurricular,
+            'year' => $year,
+            'semester' => $semester,
+            'students' => $students,
+            'scores' => $scores,
+            'classrooms' => Classroom::query()->orderBy('grade')->orderBy('name')->get(),
+            'extracurricularList' => Extracurricular::query()->where('is_active', true)->orderBy('name')->get(),
+            'settings' => ReportSetting::current(),
+        ]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'classroom_id' => ['required', 'exists:classrooms,id'],
+            'extracurricular_id' => ['required', 'exists:extracurriculars,id'],
+            'tahun_ajaran' => ['required', 'string', 'max:20'],
+            'semester' => ['required', 'in:1,2'],
+            'rows' => ['nullable', 'array'],
+            'rows.*' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        $classroom = Classroom::findOrFail($data['classroom_id']);
+        $extracurricular = Extracurricular::findOrFail($data['extracurricular_id']);
+
+        foreach (($data['rows'] ?? []) as $studentId => $predikat) {
+            $student = Student::query()
+                ->where('id', $studentId)
+                ->where('classroom_id', $classroom->id)
+                ->first();
+
+            if (! $student) {
+                continue;
+            }
+
+            $attributes = [
+                'student_id' => $student->id,
+                'extracurricular_id' => $extracurricular->id,
+                'academic_year' => $data['tahun_ajaran'],
+                'semester' => $data['semester'],
+            ];
+
+            $predikat = is_string($predikat) ? trim($predikat) : '';
+
+            if ($predikat === '') {
+                // Kosong = nilai ekskul tidak diinput -> bagian ekskul tidak muncul di rapor
+                ExtracurricularScore::query()->where($attributes)->delete();
+
+                continue;
+            }
+
+            ExtracurricularScore::query()->updateOrCreate($attributes, [
+                'classroom_id' => $classroom->id,
+                'predikat' => $predikat,
+            ]);
+        }
+
+        return redirect()
+            ->route('scores.extracurricular', $request->only('classroom_id', 'extracurricular_id', 'tahun_ajaran', 'semester'))
+            ->with('success', 'Nilai ekstrakurikuler tersimpan.');
+    }
+
+    /**
+     * @return array{0:?Classroom,1:?Extracurricular,2:string,3:string}
+     */
+    private function resolveContext(Request $request): array
+    {
+        $settings = ReportSetting::current();
+
+        $classroom = $request->filled('classroom_id')
+            ? Classroom::find($request->integer('classroom_id'))
+            : null;
+
+        $extracurricular = $request->filled('extracurricular_id')
+            ? Extracurricular::find($request->integer('extracurricular_id'))
+            : null;
+
+        $year = (string) ($request->string('tahun_ajaran') ?: $settings->active_academic_year);
+        $semester = (string) ($request->string('semester') ?: $settings->active_semester);
+
+        return [$classroom, $extracurricular, $year, $semester];
+    }
+}
