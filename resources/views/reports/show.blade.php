@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
-        <a href="{{ route('reports.index', request()->query('student_id') ? ['classroom_id' => $identity['classroom']->id] + request()->query() : request()->query()) }}"
+        <a href="{{ route('reports.index', request()->only('tahun_ajaran', 'semester')) }}"
            class="rounded-lg bg-slate-200 hover:bg-slate-300 px-4 py-2 text-sm font-medium">
             &larr; Kembali
         </a>

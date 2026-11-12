@@ -37,6 +37,11 @@
                class="block px-5 py-2.5 hover:bg-indigo-800 {{ request()->routeIs('profile.show') ? 'bg-indigo-800 text-white font-semibold' : '' }}">
                 Profil Saya
             </a>
+            <a href="{{ route('settings.show') }}"
+               class="block px-5 py-2.5 hover:bg-indigo-800 {{ request()->routeIs('settings.*') ? 'bg-indigo-800 text-white font-semibold' : '' }}">
+                Pengaturan
+                <span class="text-[10px] text-indigo-400 block leading-4">atur kelas aktif di sini</span>
+            </a>
 
             @if($role === 'siswa_orangtua')
                 <div class="px-5 pt-5 pb-1 text-[11px] uppercase tracking-wider text-indigo-400">Akun Saya</div>

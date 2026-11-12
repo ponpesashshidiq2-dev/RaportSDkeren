@@ -5,13 +5,11 @@
 @section('content')
     <form method="GET" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-5 flex flex-wrap gap-3 items-end">
         <div>
-            <label class="block text-xs text-slate-500 mb-1">Kelas</label>
-            <select name="classroom_id" required class="rounded-lg border border-slate-300 px-3 py-2 text-sm">
-                <option value="">-- Pilih --</option>
-                @foreach($classrooms as $rombel)
-                    <option value="{{ $rombel->id }}" {{ $classroom?->id == $rombel->id ? 'selected' : '' }}>{{ $rombel->name }}</option>
-                @endforeach
-            </select>
+            <label class="block text-xs text-slate-500 mb-1">Kelas Aktif (dari Pengaturan)</label>
+            <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 font-medium">
+                Kelas {{ $classroom->name }}
+                <a href="{{ route('settings.show') }}" class="ml-2 text-[11px] text-indigo-600 hover:underline font-normal">ubah</a>
+            </div>
         </div>
         <div>
             <label class="block text-xs text-slate-500 mb-1">Mata Pelajaran</label>
@@ -54,7 +52,6 @@
 
             <form method="POST" action="{{ route('scores.formative.store') }}">
                 @csrf
-                <input type="hidden" name="classroom_id" value="{{ $classroom->id }}">
                 <input type="hidden" name="subject_id" value="{{ $subject->id }}">
                 <input type="hidden" name="tahun_ajaran" value="{{ $year }}">
                 <input type="hidden" name="semester" value="{{ $semester }}">
@@ -114,7 +111,7 @@
         @endif
     @else
         <div class="rounded-lg bg-slate-50 border border-slate-200 px-4 py-6 text-center text-sm text-slate-400">
-            Pilih kelas dan mata pelajaran terlebih dahulu.
+            Pilih mata pelajaran terlebih dahulu.
         </div>
     @endif
 @endsection

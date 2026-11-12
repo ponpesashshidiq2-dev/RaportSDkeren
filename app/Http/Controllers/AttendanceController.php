@@ -12,20 +12,21 @@ use Illuminate\View\View;
 
 class AttendanceController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
         $settings = ReportSetting::current();
 
-        $classroom = $request->filled('classroom_id')
-            ? Classroom::find($request->integer('classroom_id'))
-            : null;
+        // Kelas aktif hanya diatur di halaman Pengaturan.
+        $classroom = $request->user()->classroom;
+
+        if (! $classroom) {
+            return redirect()->route('settings.show')->with('error', 'Atur kelas aktif Anda terlebih dahulu di menu Pengaturan.');
+        }
 
         $year = (string) ($request->input('tahun_ajaran') ?: $settings->active_academic_year);
         $semester = (string) ($request->input('semester') ?: $settings->active_semester);
 
-        $students = $classroom
-            ? Student::query()->visibleTo($request->user())->where('classroom_id', $classroom->id)->where('is_active', true)->orderBy('nama')->get()
-            : collect();
+        $students = Student::query()->visibleTo($request->user())->where('classroom_id', $classroom->id)->where('is_active', true)->orderBy('nama')->get();
 
         $attendances = $students->isNotEmpty()
             ? Attendance::query()
@@ -42,7 +43,6 @@ class AttendanceController extends Controller
             'semester' => $semester,
             'students' => $students,
             'attendances' => $attendances,
-            'classrooms' => Classroom::query()->orderBy('grade')->orderBy('name')->get(),
             'settings' => $settings,
         ]);
     }
@@ -50,7 +50,6 @@ class AttendanceController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'classroom_id' => ['required', 'exists:classrooms,id'],
             'tahun_ajaran' => ['required', 'string', 'max:20'],
             'semester' => ['required', 'in:1,2'],
             'rows' => ['nullable', 'array'],
@@ -59,7 +58,11 @@ class AttendanceController extends Controller
             'rows.*.tanpa_keterangan' => ['nullable', 'integer', 'min:0', 'max:365'],
         ]);
 
-        $classroom = Classroom::findOrFail($data['classroom_id']);
+        $classroom = $request->user()->classroom;
+
+        if (! $classroom) {
+            return redirect()->route('settings.show')->with('error', 'Atur kelas aktif Anda terlebih dahulu di menu Pengaturan.');
+        }
 
         foreach (($data['rows'] ?? []) as $studentId => $row) {
             $student = Student::query()
@@ -88,7 +91,7 @@ class AttendanceController extends Controller
         }
 
         return redirect()
-            ->route('scores.attendance', $request->only('classroom_id', 'tahun_ajaran', 'semester'))
+            ->route('scores.attendance', $request->only('tahun_ajaran', 'semester'))
             ->with('success', 'Data kehadiran siswa tersimpan.');
     }
 }

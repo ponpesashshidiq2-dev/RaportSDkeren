@@ -12,13 +12,20 @@ use Illuminate\View\View;
 
 class LearningObjectiveController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
         $settings = ReportSetting::current();
 
+        // Kelas aktif hanya diatur di halaman Pengaturan.
+        $classroom = $request->user()->classroom;
+
+        if (! $classroom) {
+            return redirect()->route('settings.show')->with('error', 'Atur kelas aktif Anda terlebih dahulu di menu Pengaturan.');
+        }
+
         $filters = [
             'subject_id' => $request->integer('subject_id') ?: null,
-            'classroom_id' => $request->integer('classroom_id') ?: null,
+            'classroom_id' => $classroom->id,
             'tahun_ajaran' => (string) ($request->input('tahun_ajaran') ?: $settings->active_academic_year),
             'semester' => (string) ($request->input('semester') ?: $settings->active_semester),
         ];
@@ -26,7 +33,7 @@ class LearningObjectiveController extends Controller
         $objectives = LearningObjective::query()
             ->with(['subject', 'classroom'])
             ->when($filters['subject_id'], fn ($q) => $q->where('subject_id', $filters['subject_id']))
-            ->when($filters['classroom_id'], fn ($q) => $q->where('classroom_id', $filters['classroom_id']))
+            ->where('classroom_id', $classroom->id)
             ->where('academic_year', $filters['tahun_ajaran'])
             ->where('semester', $filters['semester'])
             ->orderBy('subject_id')
@@ -36,22 +43,29 @@ class LearningObjectiveController extends Controller
         return view('learning-objectives.index', [
             'objectives' => $objectives,
             'filters' => $filters,
+            'classroom' => $classroom,
             'subjects' => Subject::query()->where('is_active', true)->orderBy('name')->get(),
-            'classrooms' => Classroom::query()->orderBy('grade')->orderBy('name')->get(),
             'academicYears' => $this->academicYears(),
             'settings' => $settings,
         ]);
     }
 
-    public function create(Request $request): View
+    public function create(Request $request): View|RedirectResponse
     {
         $settings = ReportSetting::current();
+
+        // Kelas TP baru selalu kelas aktif dari Pengaturan.
+        $classroom = $request->user()->classroom;
+
+        if (! $classroom) {
+            return redirect()->route('settings.show')->with('error', 'Atur kelas aktif Anda terlebih dahulu di menu Pengaturan.');
+        }
 
         return view('learning-objectives.form', [
             'objective' => new LearningObjective([
                 'academic_year' => (string) ($request->input('tahun_ajaran') ?: $settings->active_academic_year),
                 'semester' => (string) ($request->input('semester') ?: $settings->active_semester),
-                'classroom_id' => $request->integer('classroom_id') ?: null,
+                'classroom_id' => $classroom->id,
                 'subject_id' => $request->integer('subject_id') ?: null,
             ]),
             'subjects' => Subject::query()->where('is_active', true)->orderBy('name')->get(),
@@ -62,10 +76,21 @@ class LearningObjectiveController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        LearningObjective::create($this->validated($request));
+        $data = $this->validated($request);
+
+        // Kelas TP mengikuti kelas aktif pengguna (diatur di Pengaturan).
+        $classroom = $request->user()->classroom;
+
+        if (! $classroom) {
+            return redirect()->route('settings.show')->with('error', 'Atur kelas aktif Anda terlebih dahulu di menu Pengaturan.');
+        }
+
+        $data['classroom_id'] = $classroom->id;
+
+        LearningObjective::create($data);
 
         return redirect()
-            ->route('learning-objectives.index', $request->only('subject_id', 'classroom_id', 'tahun_ajaran', 'semester'))
+            ->route('learning-objectives.index', $request->only('subject_id', 'tahun_ajaran', 'semester'))
             ->with('success', 'Tujuan Pembelajaran berhasil ditambahkan.');
     }
 
@@ -81,10 +106,16 @@ class LearningObjectiveController extends Controller
 
     public function update(Request $request, LearningObjective $learningObjective): RedirectResponse
     {
-        $learningObjective->update($this->validated($request, $learningObjective));
+        $data = $this->validated($request, $learningObjective);
+
+        // Kelas TP tidak diubah dari sini — pergantian kelas dilakukan via Pengaturan
+        // dan hanya mempengaruhi kelas aktif, bukan data TP yang sudah ada.
+        unset($data['classroom_id']);
+
+        $learningObjective->update($data);
 
         return redirect()
-            ->route('learning-objectives.index', $request->only('subject_id', 'classroom_id', 'tahun_ajaran', 'semester'))
+            ->route('learning-objectives.index', $request->only('subject_id', 'tahun_ajaran', 'semester'))
             ->with('success', 'Tujuan Pembelajaran berhasil diperbarui.');
     }
 

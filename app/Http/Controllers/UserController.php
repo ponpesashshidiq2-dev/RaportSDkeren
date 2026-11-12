@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Classroom;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -47,7 +46,6 @@ class UserController extends Controller
         return view('users.form', [
             'user' => new User(['role' => User::ROLE_GURU]),
             'students' => $this->studentsOptions(),
-            'classrooms' => $this->classroomsOptions(),
             'roleLabels' => $this->roleLabels(),
         ]);
     }
@@ -62,7 +60,6 @@ class UserController extends Controller
             'password' => $data['password'],
             'phone' => $data['phone'] ?? null,
             'role' => $data['role'],
-            'classroom_id' => $data['classroom_id'] ?? null,
             'student_id' => $data['role'] === User::ROLE_SISWA_ORANGTUA ? ($data['student_id'] ?? null) : null,
         ]);
 
@@ -74,7 +71,6 @@ class UserController extends Controller
         return view('users.form', [
             'user' => $user,
             'students' => $this->studentsOptions($user->student_id),
-            'classrooms' => $this->classroomsOptions(),
             'roleLabels' => $this->roleLabels(),
         ]);
     }
@@ -91,7 +87,6 @@ class UserController extends Controller
         $user->email = $data['email'];
         $user->phone = $data['phone'] ?? null;
         $user->role = $role;
-        $user->classroom_id = $data['classroom_id'] ?? null;
         $user->student_id = $role === User::ROLE_SISWA_ORANGTUA ? ($data['student_id'] ?? null) : null;
 
         if (! empty($data['password'])) {
@@ -125,7 +120,6 @@ class UserController extends Controller
             'password' => [$user ? 'nullable' : 'required', 'string', 'min:6'],
             'phone' => ['nullable', 'string', 'max:20'],
             'role' => ['required', 'in:super_admin,guru,wali_kelas,kepala_sekolah,siswa_orangtua'],
-            'classroom_id' => ['nullable', 'exists:classrooms,id'],
             'student_id' => ['nullable', 'exists:students,id'],
         ];
 
@@ -157,18 +151,6 @@ class UserController extends Controller
                     ->when($exceptLinkedUserId, fn ($q) => $q->where('id', '!=', $exceptLinkedUserId))
                     ->exists(),
             ])
-            ->all();
-    }
-
-    /**
-     * @return array<int, object{id:int,name:string}>
-     */
-    private function classroomsOptions(): array
-    {
-        return Classroom::query()
-            ->orderBy('grade')
-            ->orderBy('name')
-            ->get()
             ->all();
     }
 

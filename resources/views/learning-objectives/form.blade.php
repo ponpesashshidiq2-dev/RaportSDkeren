@@ -16,15 +16,15 @@
 
             <div class="grid md:grid-cols-2 gap-4 mb-4 rounded-lg bg-slate-50 border border-slate-200 p-4 text-sm">
                 <div>
-                    <span class="text-slate-500">Mata Pelajaran:</span>
+                    <span class="text-slate-500">Kelas:</span>
                     <span class="font-semibold ml-1">
-                        {{ $subjects->firstWhere('id', old('subject_id', $objective->subject_id))?->name ?? '-' }}
+                        {{ \App\Models\Classroom::find(old('classroom_id', $objective->classroom_id))?->name ?? '-' }}
                     </span>
                 </div>
                 <div>
                     <span class="text-slate-500">Kelas:</span>
                     <span class="font-semibold ml-1">
-                        {{ $classrooms->firstWhere('id', old('classroom_id', $objective->classroom_id))?->name ?? '-' }}
+                        {{ $objective->classroom?->name ?? '-' }}
                     </span>
                 </div>
                 <div>

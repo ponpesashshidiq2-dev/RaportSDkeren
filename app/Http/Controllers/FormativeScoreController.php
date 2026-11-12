@@ -17,13 +17,15 @@ class FormativeScoreController extends Controller
 {
     public function __construct(private ScoreService $scoreService) {}
 
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
         [$classroom, $subject, $year, $semester] = $this->resolveContext($request);
 
-        $students = $classroom
-            ? Student::query()->visibleTo($request->user())->where('classroom_id', $classroom->id)->where('is_active', true)->orderBy('nama')->get()
-            : collect();
+        if (! $classroom) {
+            return redirect()->route('settings.show')->with('error', 'Atur kelas aktif Anda terlebih dahulu di menu Pengaturan.');
+        }
+
+        $students = Student::query()->visibleTo($request->user())->where('classroom_id', $classroom->id)->where('is_active', true)->orderBy('nama')->get();
 
         $objectives = ($classroom && $subject)
             ? LearningObjective::query()
@@ -53,7 +55,6 @@ class FormativeScoreController extends Controller
             'students' => $students,
             'objectives' => $objectives,
             'scores' => $scores,
-            'classrooms' => Classroom::query()->orderBy('grade')->orderBy('name')->get(),
             'subjects' => Subject::query()->where('is_active', true)->orderBy('name')->get(),
             'settings' => ReportSetting::current(),
         ]);
@@ -62,7 +63,6 @@ class FormativeScoreController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'classroom_id' => ['required', 'exists:classrooms,id'],
             'subject_id' => ['required', 'exists:subjects,id'],
             'tahun_ajaran' => ['required', 'string', 'max:20'],
             'semester' => ['required', 'in:1,2'],
@@ -70,7 +70,12 @@ class FormativeScoreController extends Controller
             'rows.*.*' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ]);
 
-        $classroom = Classroom::findOrFail($data['classroom_id']);
+        $classroom = $request->user()->classroom;
+
+        if (! $classroom) {
+            return redirect()->route('settings.show')->with('error', 'Atur kelas aktif Anda terlebih dahulu di menu Pengaturan.');
+        }
+
         $subject = Subject::findOrFail($data['subject_id']);
 
         $posted = $data['rows'] ?? [];
@@ -124,7 +129,7 @@ class FormativeScoreController extends Controller
         }
 
         return redirect()
-            ->route('scores.formative', $request->only('classroom_id', 'subject_id', 'tahun_ajaran', 'semester'))
+            ->route('scores.formative', $request->only('subject_id', 'tahun_ajaran', 'semester'))
             ->with('success', 'Nilai formatif tersimpan. Nilai akhir & penanda penurunan telah diperbarui.');
     }
 
@@ -135,9 +140,8 @@ class FormativeScoreController extends Controller
     {
         $settings = ReportSetting::current();
 
-        $classroom = $request->filled('classroom_id')
-            ? Classroom::find($request->integer('classroom_id'))
-            : null;
+        // Kelas aktif hanya diatur di halaman Pengaturan (bukan param halaman ini).
+        $classroom = $request->user()->classroom;
 
         $subject = $request->filled('subject_id')
             ? Subject::find($request->integer('subject_id'))

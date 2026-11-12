@@ -13,13 +13,15 @@ use Illuminate\View\View;
 
 class ExtracurricularScoreController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
         [$classroom, $extracurricular, $year, $semester] = $this->resolveContext($request);
 
-        $students = $classroom
-            ? Student::query()->visibleTo($request->user())->where('classroom_id', $classroom->id)->where('is_active', true)->orderBy('nama')->get()
-            : collect();
+        if (! $classroom) {
+            return redirect()->route('settings.show')->with('error', 'Atur kelas aktif Anda terlebih dahulu di menu Pengaturan.');
+        }
+
+        $students = Student::query()->visibleTo($request->user())->where('classroom_id', $classroom->id)->where('is_active', true)->orderBy('nama')->get();
 
         $scores = ($students->isNotEmpty() && $extracurricular)
             ? ExtracurricularScore::query()
@@ -38,7 +40,6 @@ class ExtracurricularScoreController extends Controller
             'semester' => $semester,
             'students' => $students,
             'scores' => $scores,
-            'classrooms' => Classroom::query()->orderBy('grade')->orderBy('name')->get(),
             'extracurricularList' => Extracurricular::query()->where('is_active', true)->orderBy('name')->get(),
             'settings' => ReportSetting::current(),
         ]);
@@ -47,7 +48,6 @@ class ExtracurricularScoreController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'classroom_id' => ['required', 'exists:classrooms,id'],
             'extracurricular_id' => ['required', 'exists:extracurriculars,id'],
             'tahun_ajaran' => ['required', 'string', 'max:20'],
             'semester' => ['required', 'in:1,2'],
@@ -55,7 +55,12 @@ class ExtracurricularScoreController extends Controller
             'rows.*' => ['nullable', 'string', 'max:50'],
         ]);
 
-        $classroom = Classroom::findOrFail($data['classroom_id']);
+        $classroom = $request->user()->classroom;
+
+        if (! $classroom) {
+            return redirect()->route('settings.show')->with('error', 'Atur kelas aktif Anda terlebih dahulu di menu Pengaturan.');
+        }
+
         $extracurricular = Extracurricular::findOrFail($data['extracurricular_id']);
 
         foreach (($data['rows'] ?? []) as $studentId => $predikat) {
@@ -92,7 +97,7 @@ class ExtracurricularScoreController extends Controller
         }
 
         return redirect()
-            ->route('scores.extracurricular', $request->only('classroom_id', 'extracurricular_id', 'tahun_ajaran', 'semester'))
+            ->route('scores.extracurricular', $request->only('extracurricular_id', 'tahun_ajaran', 'semester'))
             ->with('success', 'Nilai ekstrakurikuler tersimpan.');
     }
 
@@ -103,9 +108,8 @@ class ExtracurricularScoreController extends Controller
     {
         $settings = ReportSetting::current();
 
-        $classroom = $request->filled('classroom_id')
-            ? Classroom::find($request->integer('classroom_id'))
-            : null;
+        // Kelas aktif hanya diatur di halaman Pengaturan.
+        $classroom = $request->user()->classroom;
 
         $extracurricular = $request->filled('extracurricular_id')
             ? Extracurricular::find($request->integer('extracurricular_id'))

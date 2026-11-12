@@ -16,13 +16,16 @@ class SummativeScoreController extends Controller
 {
     public function __construct(private ScoreService $scoreService) {}
 
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
         $settings = ReportSetting::current();
 
-        $classroom = $request->filled('classroom_id')
-            ? Classroom::find($request->integer('classroom_id'))
-            : null;
+        // Kelas aktif hanya diatur di halaman Pengaturan.
+        $classroom = $request->user()->classroom;
+
+        if (! $classroom) {
+            return redirect()->route('settings.show')->with('error', 'Atur kelas aktif Anda terlebih dahulu di menu Pengaturan.');
+        }
 
         $subject = $request->filled('subject_id')
             ? Subject::find($request->integer('subject_id'))
@@ -31,9 +34,7 @@ class SummativeScoreController extends Controller
         $year = (string) ($request->input('tahun_ajaran') ?: $settings->active_academic_year);
         $semester = (string) ($request->input('semester') ?: $settings->active_semester);
 
-        $students = $classroom
-            ? Student::query()->visibleTo($request->user())->where('classroom_id', $classroom->id)->where('is_active', true)->orderBy('nama')->get()
-            : collect();
+        $students = Student::query()->visibleTo($request->user())->where('classroom_id', $classroom->id)->where('is_active', true)->orderBy('nama')->get();
 
         $lingkupOptions = ($subject)
             ? SummativeScore::query()
@@ -64,7 +65,6 @@ class SummativeScoreController extends Controller
             'students' => $students,
             'scores' => $scores,
             'lingkupOptions' => $lingkupOptions,
-            'classrooms' => Classroom::query()->orderBy('grade')->orderBy('name')->get(),
             'subjects' => Subject::query()->where('is_active', true)->orderBy('name')->get(),
             'settings' => $settings,
         ]);
@@ -73,7 +73,6 @@ class SummativeScoreController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'classroom_id' => ['required', 'exists:classrooms,id'],
             'subject_id' => ['required', 'exists:subjects,id'],
             'tahun_ajaran' => ['required', 'string', 'max:20'],
             'semester' => ['required', 'in:1,2'],
@@ -82,7 +81,12 @@ class SummativeScoreController extends Controller
             'rows.*' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ]);
 
-        $classroom = Classroom::findOrFail($data['classroom_id']);
+        $classroom = $request->user()->classroom;
+
+        if (! $classroom) {
+            return redirect()->route('settings.show')->with('error', 'Atur kelas aktif Anda terlebih dahulu di menu Pengaturan.');
+        }
+
         $subject = Subject::findOrFail($data['subject_id']);
 
         foreach (($data['rows'] ?? []) as $studentId => $score) {
@@ -120,7 +124,7 @@ class SummativeScoreController extends Controller
         }
 
         return redirect()
-            ->route('scores.summative', $request->only('classroom_id', 'subject_id', 'tahun_ajaran', 'semester'))
+            ->route('scores.summative', $request->only('subject_id', 'tahun_ajaran', 'semester'))
             ->with('success', 'Nilai sumatif tersimpan. Nilai akhir & penanda penurunan telah diperbarui.');
     }
 }

@@ -10,18 +10,7 @@
                 <input type="text" name="q" value="{{ request('q') }}" placeholder="Nama / NISN / NIS"
                        class="rounded-lg border border-slate-300 px-3 py-2 text-sm w-52 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
-            <div>
-                <label class="block text-xs text-slate-500 mb-1">Kelas</label>
-                <select name="kelas_id" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <option value="">Semua kelas</option>
-                    @foreach($classrooms as $rombel)
-                        <option value="{{ $rombel->id }}" {{ request('kelas_id') == $rombel->id ? 'selected' : '' }}>
-                            {{ $rombel->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <button class="rounded-lg bg-slate-200 hover:bg-slate-300 px-4 py-2 text-sm font-medium">Filter</button>
+            <button class="rounded-lg bg-slate-200 hover:bg-slate-300 px-4 py-2 text-sm font-medium">Cari</button>
         </form>
 
         <div class="flex gap-2">

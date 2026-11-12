@@ -38,22 +38,21 @@ class ReportController extends Controller
 
         $settings = ReportSetting::current();
 
-        $students = collect();
-        $classroom = $request->filled('classroom_id')
-            ? Classroom::find($request->integer('classroom_id'))
-            : null;
+        // Kelas aktif hanya diatur di halaman Pengaturan.
+        $classroom = $user->classroom;
 
-        if ($classroom) {
-            $students = Student::query()
-                ->visibleTo($user)
-                ->where('classroom_id', $classroom->id)
-                ->where('is_active', true)
-                ->orderBy('nama')
-                ->get();
+        if (! $classroom) {
+            return redirect()->route('settings.show')->with('error', 'Atur kelas aktif Anda terlebih dahulu di menu Pengaturan.');
         }
 
+        $students = Student::query()
+            ->visibleTo($user)
+            ->where('classroom_id', $classroom->id)
+            ->where('is_active', true)
+            ->orderBy('nama')
+            ->get();
+
         return view('reports.index', [
-            'classrooms' => Classroom::query()->orderBy('grade')->orderBy('name')->get(),
             'students' => $students,
             'classroom' => $classroom,
             'year' => (string) ($request->input('tahun_ajaran') ?: $settings->active_academic_year),
@@ -66,13 +65,16 @@ class ReportController extends Controller
      * Rekap nilai akhir per kelas + warna MERAH untuk nilai yang turun
      * dibandingkan semester/tahun ajaran sebelumnya.
      */
-    public function recap(Request $request): View
+    public function recap(Request $request): View|RedirectResponse
     {
         $settings = ReportSetting::current();
 
-        $classroom = $request->filled('classroom_id')
-            ? Classroom::find($request->integer('classroom_id'))
-            : null;
+        // Kelas aktif hanya diatur di halaman Pengaturan.
+        $classroom = $request->user()->classroom;
+
+        if (! $classroom) {
+            return redirect()->route('settings.show')->with('error', 'Atur kelas aktif Anda terlebih dahulu di menu Pengaturan.');
+        }
 
         $subject = $request->filled('subject_id')
             ? Subject::find($request->integer('subject_id'))
@@ -81,9 +83,7 @@ class ReportController extends Controller
         $year = (string) ($request->input('tahun_ajaran') ?: $settings->active_academic_year);
         $semester = (string) ($request->input('semester') ?: $settings->active_semester);
 
-        $recap = $classroom
-            ? $this->scoreService->recapWithComparison($classroom, $year, $semester, $subject, $request->user())
-            : collect();
+        $recap = $this->scoreService->recapWithComparison($classroom, $year, $semester, $subject, $request->user());
 
         return view('reports.recap', [
             'classroom' => $classroom,
@@ -91,7 +91,6 @@ class ReportController extends Controller
             'year' => $year,
             'semester' => $semester,
             'recap' => $recap,
-            'classrooms' => Classroom::query()->orderBy('grade')->orderBy('name')->get(),
             'subjects' => Subject::query()->where('is_active', true)->orderBy('name')->get(),
             'settings' => $settings,
         ]);

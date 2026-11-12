@@ -57,16 +57,12 @@
                     @endif
                 </div>
 
-                <div>
-                    <label class="block text-xs text-slate-500 mb-1">Rombel (untuk Wali Kelas/Guru)</label>
-                    <select name="classroom_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option value="">— Tanpa rombel —</option>
-                        @foreach($classrooms as $rombel)
-                            <option value="{{ $rombel->id }}" {{ old('classroom_id', $user->classroom_id) == $rombel->id ? 'selected' : '' }}>
-                                Kelas {{ $rombel->name }} ({{ $rombel->academic_year }})
-                            </option>
-                        @endforeach
-                    </select>
+                <div class="flex items-end pb-1">
+                    <p class="text-[11px] text-slate-400 leading-4">
+                        Kelas tidak diatur di sini — setiap pengguna mengatur
+                        <b>kelas aktifnya sendiri</b> melalui menu
+                        <a href="{{ route('settings.show') }}" class="text-indigo-600 underline">Pengaturan</a>.
+                    </p>
                 </div>
             </div>
 

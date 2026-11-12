@@ -16,12 +16,9 @@ class StudentController extends Controller
 {
     public function index(Request $request): View
     {
-        $classrooms = Classroom::query()->orderBy('grade')->orderBy('name')->get();
-
         $students = Student::query()
             ->with(['classroom', 'creator'])
             ->visibleTo($request->user())
-            ->when($request->filled('kelas_id'), fn ($q) => $q->where('classroom_id', $request->integer('kelas_id')))
             ->when($request->filled('q'), function ($q) use ($request) {
                 $term = $request->string('q');
                 $q->where(function ($qq) use ($term) {
@@ -34,7 +31,7 @@ class StudentController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('students.index', compact('students', 'classrooms'));
+        return view('students.index', compact('students'));
     }
 
     public function create(): View

@@ -11,6 +11,7 @@ use App\Http\Controllers\LearningObjectiveController;
 use App\Http\Controllers\MyScoreController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SettingController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\SummativeScoreController;
@@ -41,6 +42,12 @@ Route::middleware(['auth'])->group(function () {
 
     // Profil akun (semua role) — data siswa tampil bila akun tertaut
     Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
+
+    // Pengaturan — satu-satunya tempat pengguna mengatur kelas aktifnya
+    Route::get('pengaturan', [SettingController::class, 'show'])->name('settings.show');
+    Route::post('pengaturan', [SettingController::class, 'update'])
+        ->middleware('role:super_admin,guru,wali_kelas,kepala_sekolah')
+        ->name('settings.update');
 
     // Nilai milik sendiri (khusus akun siswa/orang tua; data tidak bisa diakses lintas user)
     Route::middleware('role:siswa_orangtua')->group(function () {
